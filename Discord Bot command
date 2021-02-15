@@ -9,38 +9,17 @@ using HtmlAgilityPack;
 
 using Discord.Commands;
 using System.Web;
+using static HorsemenBot.Modules.LadderPosition;
 
 namespace HorsemenBot.Modules
 {
-    [Name("Setting Team Name")]
-
-    public class LadderPosition : ModuleBase<SocketCommandContext>
+   public class Program
     {
-        [Group(""), Name("Ladder Position")]
-        [RequireContext(ContextType.Guild)]
-
-        class Model
-        {
-            public int Position { get; set; }
-            public string TeamName { get; set; }
-            public string TeamLink { get; set; }
-            public string TeamLogo { get; set; }
-            public string GroupLogo { get; set; }
-            public string GroupTitle { get; set; }
-            public int Wins { get; set; }
-            public int Loses { get; set; }
-            public int GamesPlayed { get; set; }
-            public int MMR { get; set; }
-            public int PointsScored { get; set; }
-            public string Division { get; set; }
-            public string ImageSource { get; set; }
-            public int LadderPosition { get; set; }
-        }
-
         public static async Task Main(string[] args)
         {
             var models = new List<Model>();
-            await LadderPosition(models);
+            var set = new Set();
+            await set.LadderPosition(models);
             var teams = models.Where(x => x.TeamName.Equals("Femboys"));
 
             foreach (var team in teams)
@@ -48,7 +27,31 @@ namespace HorsemenBot.Modules
                 Console.WriteLine($"Team: { team.TeamName }\tPosition: {team.Position}\tTeamLink: {team.TeamLink}");
             }
         }
+    }
 
+    public class Model
+    {
+        public int Position { get; set; }
+        public string TeamName { get; set; }
+        public string TeamLink { get; set; }
+        public string TeamLogo { get; set; }
+        public string GroupLogo { get; set; }
+        public string GroupTitle { get; set; }
+        public int Wins { get; set; }
+        public int Loses { get; set; }
+        public int GamesPlayed { get; set; }
+        public int MMR { get; set; }
+        public int PointsScored { get; set; }
+        public string Division { get; set; }
+        public string ImageSource { get; set; }
+        public int LadderPosition { get; set; }
+    }
+
+    [Name("Setting Team Name")]
+    public class LadderPosition : ModuleBase<SocketCommandContext>
+    {
+        [Group(""), Name("Ladder Position")]
+        [RequireContext(ContextType.Guild)]
         public class Set : ModuleBase
         {
             [Command("ladder")]
@@ -81,7 +84,7 @@ namespace HorsemenBot.Modules
                 document1.Load(@"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-1-100.txt");
 
                 var table = document1.DocumentNode.SelectNodes("//tr[contains(@class, 'vrml_table_row')]").ToList().SkipLast(1);
-                
+
                 foreach (var t in table)
                 {
                     var model = new Model
@@ -93,15 +96,17 @@ namespace HorsemenBot.Modules
                         TeamLogo = t.SelectSingleNode("td[contains(@class, 'team_cell')]/a/img").Attributes["src"].Value,
                         TeamName = t.SelectSingleNode("td/a/span[contains(@class, 'team_name')]").InnerText,
                         GroupLogo = t.SelectSingleNode("td[contains(@class, 'group_cell')]/img").Attributes["src"].Value,
-                        GroupTitle = t.SelectSingleNode("td[contains(@class, 'group_cell')]/img").Attributes["title"].Value                  
+                        GroupTitle = t.SelectSingleNode("td[contains(@class, 'group_cell')]/img").Attributes["title"].Value
                     };
                     models.Add(model);
                 }
-                
+
                 await ReplyAsync(models.ToString());
 
                 //await Task.Delay(500);
             }
         }
     }
+
+
 }
