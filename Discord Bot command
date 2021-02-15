@@ -1,0 +1,107 @@
+using System.Threading.Tasks;
+using System.IO;
+using System.Net;
+using System.Linq;
+using System.Collections.Generic;
+using System;
+
+using HtmlAgilityPack;
+
+using Discord.Commands;
+using System.Web;
+
+namespace HorsemenBot.Modules
+{
+    [Name("Setting Team Name")]
+
+    public class LadderPosition : ModuleBase<SocketCommandContext>
+    {
+        [Group(""), Name("Ladder Position")]
+        [RequireContext(ContextType.Guild)]
+
+        class Model
+        {
+            public int Position { get; set; }
+            public string TeamName { get; set; }
+            public string TeamLink { get; set; }
+            public string TeamLogo { get; set; }
+            public string GroupLogo { get; set; }
+            public string GroupTitle { get; set; }
+            public int Wins { get; set; }
+            public int Loses { get; set; }
+            public int GamesPlayed { get; set; }
+            public int MMR { get; set; }
+            public int PointsScored { get; set; }
+            public string Division { get; set; }
+            public string ImageSource { get; set; }
+            public int LadderPosition { get; set; }
+        }
+
+        public static async Task Main(string[] args)
+        {
+            var models = new List<Model>();
+            await LadderPosition(models);
+            var teams = models.Where(x => x.TeamName.Equals("Femboys"));
+
+            foreach (var team in teams)
+            {
+                Console.WriteLine($"Team: { team.TeamName }\tPosition: {team.Position}\tTeamLink: {team.TeamLink}");
+            }
+        }
+
+        public class Set : ModuleBase
+        {
+            [Command("ladder")]
+            [Summary("Show your team's position on the ladder")]
+
+            public async Task LadderPosition(List<Model> models)
+            {
+
+                using WebClient client = new WebClient();
+
+                await Task.Delay(500);
+
+                //await ReplyAsync("Downloading VRML data, please stand by...");
+
+                string TeamName = File.ReadAllText($@"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\TeamName.txt");
+                /*
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-1-100.txt");
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/?rankMin=101", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-101-200.txt");
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/?rankMin=201", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-201-300.txt");
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/?rankMin=301", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-301-400.txt");
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/?rankMin=401", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-401-500.txt");
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/?rankMin=501", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-501-600.txt");
+                client.DownloadFile("https://vrmasterleague.com/EchoArena/Standings/?rankMin=601", @"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-601-700.txt");
+                */
+
+                await ReplyAsync($"VRML data downloaded, fetching **{TeamName}'s** results...");
+
+                HtmlDocument document1 = new HtmlDocument();
+
+                document1.Load(@"C:\Users\anafa\OneDrive\Desktop\Horsemen Bot\Ladder-1-100.txt");
+
+                var table = document1.DocumentNode.SelectNodes("//tr[contains(@class, 'vrml_table_row')]").ToList().SkipLast(1);
+                
+                foreach (var t in table)
+                {
+                    var model = new Model
+                    {
+                        Position = int.Parse(t.SelectSingleNode("td[contains(@class, 'pos_cell')]").InnerText),
+                        ImageSource = t.SelectSingleNode("td[contains(@class, 'div_cell')]/img").Attributes["src"].Value,
+                        Division = t.SelectSingleNode("td[contains(@class, 'div_cell')]/img").Attributes["title"].Value,
+                        TeamLink = t.SelectSingleNode("td[contains(@class, 'team_cell')]/a").Attributes["href"].Value,
+                        TeamLogo = t.SelectSingleNode("td[contains(@class, 'team_cell')]/a/img").Attributes["src"].Value,
+                        TeamName = t.SelectSingleNode("td/a/span[contains(@class, 'team_name')]").InnerText,
+                        GroupLogo = t.SelectSingleNode("td[contains(@class, 'group_cell')]/img").Attributes["src"].Value,
+                        GroupTitle = t.SelectSingleNode("td[contains(@class, 'group_cell')]/img").Attributes["title"].Value                  
+                    };
+                    models.Add(model);
+                }
+                
+                await ReplyAsync(models.ToString());
+
+                //await Task.Delay(500);
+            }
+        }
+    }
+}
